@@ -1,6 +1,5 @@
 
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 [DefaultExecutionOrder(-1)]
 public class InputManager : Singleton<InputManager>
@@ -10,9 +9,9 @@ public class InputManager : Singleton<InputManager>
     public GameObject prefab;
 
     #region Events
-    public delegate void StartTouch(Vector2 position, float time);
+    public delegate void StartTouch();
     public event StartTouch OnStartTouch;
-    public delegate void EndTouch(Vector2 position, float time);
+    public delegate void EndTouch();
     public event EndTouch OnEndTouch;
 
     public delegate void StartTouchSecondaryE();
@@ -39,19 +38,19 @@ public class InputManager : Singleton<InputManager>
 
     void Start()
     {
-        touchControl.Touch.PrimaryContact.started += ctx => StartTouchPrimary(ctx);
-        touchControl.Touch.PrimaryContact.canceled += ctx => EndTouchPrimary(ctx);
+        touchControl.Touch.PrimaryContact.started += _ => StartTouchPrimary();
+        touchControl.Touch.PrimaryContact.canceled += _ => EndTouchPrimary();
         touchControl.Touch.SecondaryContact.started += _ => StartTouchSecondary();
         touchControl.Touch.SecondaryContact.canceled += _ => EndTouchSecondary();
     }
 
-    private void StartTouchPrimary(InputAction.CallbackContext context)
+    private void StartTouchPrimary()
     {
-        if (OnStartTouch != null) OnStartTouch(touchControl.Touch.PrimaryPosition.ReadValue<Vector2>(), (float)context.startTime);
+        if (OnStartTouch != null) OnStartTouch();
     }
-    private void EndTouchPrimary(InputAction.CallbackContext context)
+    private void EndTouchPrimary()
     {
-        if (OnEndTouch != null) OnEndTouch(touchControl.Touch.PrimaryPosition.ReadValue<Vector2>(), (float)context.time);
+        if (OnEndTouch != null) OnEndTouch();
     }
 
     private void StartTouchSecondary()

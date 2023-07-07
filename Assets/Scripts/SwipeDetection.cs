@@ -1,19 +1,16 @@
 using UnityEngine;
+using System.Collections;
 
 public class SwipeDetection : MonoBehaviour
 {
     [SerializeField]
-    private float minimumDistance = .2f;
-    [SerializeField]
     private float maximumTime = 1f;
 
     private InputManager inputManager;
-    private Vector2 startPosition;
-    private float startTime;
-    private Vector2 endPosition;
-    private float endTime;
 
     private bool secondFinger = false;
+    private Coroutine swipeCoroutine;
+
     private void Awake()
     {
         inputManager = InputManager.Instance;
@@ -31,33 +28,37 @@ public class SwipeDetection : MonoBehaviour
         inputManager.OnEndTouch -= SwipeEnd;
     }
 
-    private void SwipeStart(Vector2 position, float time)
+    private void SwipeStart()
     {
-        startPosition = position;
-        startTime = time;
-
+        if (inputManager.prefab.gameObject != null && !secondFinger) {
+            swipeCoroutine = StartCoroutine(SwipeDetect());
+        }
     }
-    private void SwipeEnd(Vector2 position, float time)
+    private void SwipeEnd()
     {
-        endPosition = position;
-        endTime = time;
-        DetectSwipe();
+    
+        StopCoroutine(swipeCoroutine);
         secondFinger = false;
     }
 
     private void SwipeCancelled()
     {
         secondFinger = true;
+        StopCoroutine(swipeCoroutine);
     }
-    private void DetectSwipe()
-    {
-        if (secondFinger) return;
-        if (Vector3.Distance(startPosition, endPosition) >= minimumDistance &&
-            (endTime - startTime) <= maximumTime)
-        {
-            Debug.Log("swipe happened");
-            Vector3 direction = (startPosition - endPosition).normalized;
-            inputManager.prefab.transform.localRotation *= Quaternion.Euler(direction);
+
+    private IEnumerator SwipeDetect() {
+        yield return new WaitForSeconds(maximumTime);
+        if (secondFinger) yield return null;
+        Vector2 prevPosition = new Vector2(0,0), position = new Vector2(0,0);
+        while(true) {
+            position = inputManager.PrimaryPosition();
+            Vector2 direction = position - prevPosition;
+            Debug.Log(direction);
+            inputManager.prefab.transform.Rotate(Vector3.down, direction.x, Space.World);
+            inputManager.prefab.transform.Rotate(Vector3.left, direction.y, Space.World);
+            prevPosition = position;
+            yield return null;
         }
     }
 }
